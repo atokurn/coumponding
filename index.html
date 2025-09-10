@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Target Profit Trading</title>
+    <!-- Memuat Tailwind CSS untuk styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Memuat Font Inter dari Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Menggunakan font Inter sebagai font utama */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Style untuk scrollbar agar lebih minimalis */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl mx-auto bg-white shadow-lg rounded-2xl p-6 md:p-10 transition-all duration-300">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Kalkulator Target Profit</h1>
+            <p class="text-gray-500 mt-2">Hitung estimasi profit trading Anda berdasarkan target atau durasi.</p>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Kolom Input dan Hasil Utama -->
+            <div class="space-y-6">
+                <form id="calculatorForm" class="space-y-4">
+                    <!-- Input Umum -->
+                    <div>
+                        <label for="initialCapital" class="block text-sm font-medium text-gray-700 mb-1">Modal Awal (Rp)</label>
+                        <input type="text" id="initialCapital" placeholder="Contoh: 1.000.000" class="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required>
+                    </div>
+                    <div>
+                        <label for="dailyProfit" class="block text-sm font-medium text-gray-700 mb-1">Profit Harian (%)</label>
+                        <input type="number" id="dailyProfit" step="0.01" placeholder="Contoh: 2" class="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition" required>
+                    </div>
+
+                    <!-- Pilihan Mode Perhitungan -->
+                    <div class="pt-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Mode Perhitungan</label>
+                        <div class="flex items-center space-x-6">
+                            <div class="flex items-center">
+                                <input id="modeTarget" name="calculationMode" type="radio" value="target" class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" checked>
+                                <label for="modeTarget" class="ml-2 block text-sm text-gray-900">Target Modal</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="modeDays" name="calculationMode" type="radio" value="days" class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                                <label for="modeDays" class="ml-2 block text-sm text-gray-900">Jumlah Hari</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Input Dinamis Berdasarkan Mode -->
+                    <div id="targetCapitalGroup">
+                        <label for="targetCapital" class="block text-sm font-medium text-gray-700 mb-1">Target Modal (Rp)</label>
+                        <input type="text" id="targetCapital" placeholder="Contoh: 10.000.000" class="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+                    </div>
+                    <div id="daysGroup" class="hidden">
+                         <label for="numberOfDays" class="block text-sm font-medium text-gray-700 mb-1">Jumlah Hari</label>
+                        <input type="number" id="numberOfDays" placeholder="Contoh: 90" class="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+                    </div>
+                    
+                    <!-- Opsi Pembulatan -->
+                    <div class="flex items-center pt-2">
+                        <input id="roundingOption" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <label for="roundingOption" class="ml-3 block text-sm font-medium text-gray-800">Bulatkan perhitungan harian</label>
+                    </div>
+
+                    <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-105">
+                        Hitung
+                    </button>
+                </form>
+
+                <!-- Container untuk menampilkan hasil -->
+                <div id="resultContainer" class="hidden bg-blue-50 border-l-4 border-blue-500 text-blue-800 p-6 rounded-lg space-y-3">
+                    <h3 class="text-lg font-semibold">Hasil Perhitungan</h3>
+                    <p id="resultText"></p>
+                </div>
+            </div>
+
+            <!-- Kolom Rincian Harian -->
+            <div id="dailyDetailsContainer" class="hidden">
+                <h3 class="text-xl font-bold mb-4 text-center md:text-left">Rincian Pertumbuhan Modal</h3>
+                <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-4 h-96 overflow-y-auto custom-scrollbar">
+                    <table class="w-full text-sm text-left text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0">
+                            <tr>
+                                <th scope="col" class="px-4 py-3">Hari Ke-</th>
+                                <th scope="col" class="px-4 py-3">Profit Harian</th>
+                                <th scope="col" class="px-4 py-3">Jumlah Modal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dailyLog">
+                            <!-- Data harian akan dimasukkan di sini oleh JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <script>
+        // --- DOM ELEMENT SELECTION ---
+        const form = document.getElementById('calculatorForm');
+        const initialCapitalInput = document.getElementById('initialCapital');
+        const targetCapitalInput = document.getElementById('targetCapital');
+        const numberOfDaysInput = document.getElementById('numberOfDays');
+        const resultContainer = document.getElementById('resultContainer');
+        const resultText = document.getElementById('resultText');
+        const dailyDetailsContainer = document.getElementById('dailyDetailsContainer');
+        const dailyLog = document.getElementById('dailyLog');
+        const modeTargetRadio = document.getElementById('modeTarget');
+        const modeDaysRadio = document.getElementById('modeDays');
+        const targetCapitalGroup = document.getElementById('targetCapitalGroup');
+        const daysGroup = document.getElementById('daysGroup');
+
+        // --- HELPER FUNCTIONS ---
+        const formatNumberInput = (inputElement) => {
+            let value = inputElement.value.replace(/\D/g, '');
+            inputElement.value = value ? new Intl.NumberFormat('id-ID').format(value) : '';
+        };
+
+        const formatCurrency = (number) => {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 2
+            }).format(number);
+        };
+        
+        const parseFormattedNumber = (stringValue) => {
+            return parseFloat(stringValue.replace(/\./g, '')) || 0;
+        };
+
+        // Fungsi baru untuk memformat durasi hari ke tahun, bulan, hari
+        const formatDuration = (totalDays) => {
+            if (totalDays <= 0) return "0 hari";
+
+            const years = Math.floor(totalDays / 365);
+            const remainingAfterYears = totalDays % 365;
+            const months = Math.floor(remainingAfterYears / 30); // Asumsi 1 bulan = 30 hari
+            const days = remainingAfterYears % 30;
+
+            const parts = [];
+            if (years > 0) parts.push(`${years} tahun`);
+            if (months > 0) parts.push(`${months} bulan`);
+            if (days > 0) parts.push(`${days} hari`);
+            
+            if (parts.length === 0) return `Kurang dari 1 hari`;
+
+            // Menggabungkan dengan koma dan kata 'dan'
+            let result = parts.join(', ');
+            const lastCommaIndex = result.lastIndexOf(',');
+            if (lastCommaIndex !== -1) {
+                result = result.substring(0, lastCommaIndex) + ' dan' + result.substring(lastCommaIndex + 1);
+            }
+            return result;
+        };
+
+        // --- EVENT LISTENERS ---
+        initialCapitalInput.addEventListener('input', () => formatNumberInput(initialCapitalInput));
+        targetCapitalInput.addEventListener('input', () => formatNumberInput(targetCapitalInput));
+
+        [modeTargetRadio, modeDaysRadio].forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const isTargetMode = e.target.value === 'target';
+                targetCapitalGroup.classList.toggle('hidden', !isTargetMode);
+                daysGroup.classList.toggle('hidden', isTargetMode);
+                targetCapitalInput.required = isTargetMode;
+                numberOfDaysInput.required = !isTargetMode;
+            });
+        });
+        
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const calculationMode = document.querySelector('input[name="calculationMode"]:checked').value;
+            const initialCapital = parseFormattedNumber(initialCapitalInput.value);
+            const dailyProfitPercent = parseFloat(document.getElementById('dailyProfit').value);
+            const isRoundingEnabled = document.getElementById('roundingOption').checked;
+
+            if (isNaN(initialCapital) || isNaN(dailyProfitPercent) || initialCapital <= 0 || dailyProfitPercent <= 0) {
+                alert('Mohon isi Modal Awal dan Profit Harian dengan angka positif.');
+                return;
+            }
+
+            dailyLog.innerHTML = '';
+            let currentCapital = initialCapital;
+
+            if (calculationMode === 'target') {
+                const targetCapital = parseFormattedNumber(targetCapitalInput.value);
+                if (isNaN(targetCapital) || targetCapital <= 0) {
+                    alert('Mohon isi Target Modal dengan angka positif.');
+                    return;
+                }
+                if (initialCapital >= targetCapital) {
+                    alert('Modal Awal harus lebih kecil dari Target Modal.');
+                    return;
+                }
+
+                let days = 0;
+                while (currentCapital < targetCapital) {
+                    days++;
+                    const { profit, newCapital } = calculateDailyGrowth(currentCapital, dailyProfitPercent, isRoundingEnabled);
+                    currentCapital = newCapital;
+                    appendDailyLogRow(days, profit, newCapital);
+                }
+                const durationText = formatDuration(days);
+                resultText.innerHTML = `Anda butuh sekitar <strong class="text-xl">${durationText}</strong> (${days} hari) untuk mencapai target.`;
+
+            } else { // calculationMode === 'days'
+                const numberOfDays = parseInt(numberOfDaysInput.value);
+                if (isNaN(numberOfDays) || numberOfDays <= 0) {
+                    alert('Mohon isi Jumlah Hari dengan angka positif.');
+                    return;
+                }
+
+                for (let day = 1; day <= numberOfDays; day++) {
+                    const { profit, newCapital } = calculateDailyGrowth(currentCapital, dailyProfitPercent, isRoundingEnabled);
+                    currentCapital = newCapital;
+                    appendDailyLogRow(day, profit, newCapital);
+                }
+                resultText.innerHTML = `Setelah <strong>${numberOfDays}</strong> hari, modal Anda menjadi <strong class="text-2xl">${formatCurrency(currentCapital)}</strong>`;
+            }
+
+            resultContainer.classList.remove('hidden');
+            dailyDetailsContainer.classList.remove('hidden');
+        });
+
+        // --- CALCULATION & DOM MANIPULATION ---
+        function calculateDailyGrowth(capital, profitPercent, useRounding) {
+            let profit = capital * (profitPercent / 100);
+            if (useRounding) {
+                profit = Math.round(profit);
+            }
+            const newCapital = capital + profit;
+            return { profit, newCapital };
+        }
+
+        function appendDailyLogRow(day, profit, newCapital) {
+            const row = document.createElement('tr');
+            row.className = 'bg-white border-b hover:bg-gray-50';
+            row.innerHTML = `
+                <td class="px-4 py-2 font-medium text-gray-900">${day}</td>
+                <td class="px-4 py-2 text-green-600 font-medium">+${formatCurrency(profit)}</td>
+                <td class="px-4 py-2">${formatCurrency(newCapital)}</td>
+            `;
+            dailyLog.appendChild(row);
+        }
+
+        // --- INITIALIZATION ---
+        targetCapitalInput.required = true;
+        numberOfDaysInput.required = false;
+
+    </script>
+
+</body>
+</html>
+
